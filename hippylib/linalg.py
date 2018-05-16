@@ -14,12 +14,9 @@
 from __future__ import absolute_import, division, print_function
 
 import dolfin as dl
-import os
 import numpy as np
 
 from petsc4py import PETSc
-
-from .checkDolfinVersion import dlversion
 
 def amg_method():
     """
@@ -39,10 +36,6 @@ def MatMatMult(A,B):
     """
     Compute the matrix-matrix product A*B.
     """
-    #out = PETSc.Mat()
-    #ierr = PETSc.MatMatMult(dl.as_backend_type(A).mat(), dl.as_backend_type(B).mat(),
-    #                        PETSc.MAT_INITIAL_MATRIX, PETSc.PETSC_DEFAULT, out)
-    #assert ierr == 0
     Amat = dl.as_backend_type(A).mat()
     Bmat = dl.as_backend_type(B).mat()
     out = Amat.matMult(Bmat)
@@ -55,20 +48,23 @@ def MatPtAP(A,P):
     """
     Compute the triple matrix product P^T*A*P.
     """
-    out = PETSc.Mat()
-    ierr = PETSc.MatPtAP(dl.as_backend_type(A).mat(), dl.as_backend_type(B).mat(),
-                         PETSc.MAT_INITIAL_MATRIX, 1,0, out)
-    assert ierr == 0
+    Amat = dl.as_backend_type(A).mat()
+    Pmat = dl.as_backend_type(P).mat()
+    out = Amat.PtAP(Pmat, fill=1.0)
+    _, out_map = Pmat.getLGMap()
+    out.setLGMap(out_map, out_map)
     return dl.Matrix(dl.PETScMatrix(out))
 
 def MatAtB(A,B):
     """
     Compute the matrix-matrix product A^T*B.
     """
-    out = PETSc.Mat()
-    ierr = PETSc.MatTransposeMatMult(dl.as_backend_type(A).mat(), dl.as_backend_type(B).mat(),
-                                     PETSc.MAT_INITIAL_MATRIX, PETSc.PETSC_DEFAULT, out)
-    assert ierr == 0
+    Amat = dl.as_backend_type(A).mat()
+    Bmat = dl.as_backend_type(B).mat()
+    out = Amat.transposeMatMult(Bmat)
+    _, rmap = Amat.getLGMap()
+    _, cmap = Bmat.getLGMap()
+    out.setLGMap(rmap, cmap)
     return dl.Matrix(dl.PETScMatrix(out))
 
 def Transpose(A):

@@ -52,12 +52,17 @@ def assemblePointwiseObservation(Vh, targets):
     colLGmap = PETSc.LGMap().create(dofmap.dofs(), comm = mesh.mpi_comm() )
     A.setLGMap(rowLGmap, colLGmap)
     
+    if dlversion() <= (2017,2,0):
+        v = np.zeros(sdim)
     for k in range(ntargets):
         t = targets[k,:]
         p = dl.Point(t)
         cell_id = bbt.compute_first_entity_collision(p)
         tvert = coords[cells[cell_id,:],:]
-        v = dolfin_element.evaluate_basis_all(t,tvert, cell_id)
+        if dlversion() <= (2017,2,0):
+            dolfin_element.evaluate_basis_all(v, t,tvert, cell_id)
+        else:
+            v = dolfin_element.evaluate_basis_all(t,tvert, cell_id)
         cols = dofmap.cell_dofs(cell_id)
         for j in range(sdim):
             A[k, cols[j]] = v[j]

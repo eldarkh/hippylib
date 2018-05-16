@@ -199,12 +199,10 @@ class LaplacianPrior(_Prior):
             representation_old = dl.parameters["form_compiler"]["representation"]
             dl.parameters["form_compiler"]["representation"] = "quadrature"
             
-        if dlversion() <= (1,6,0):
-            Qh = dl.VectorFunctionSpace(Vh.mesh(), 'Quadrature', qdegree, dim=(ndim+1) )
-        else:
-            element = dl.VectorElement("Quadrature", Vh.mesh().ufl_cell(),
-                                       qdegree, dim=(ndim+1), quad_scheme="default")
-            Qh = dl.FunctionSpace(Vh.mesh(), element)
+
+        element = dl.VectorElement("Quadrature", Vh.mesh().ufl_cell(),
+                                    qdegree, dim=(ndim+1), quad_scheme="default")
+        Qh = dl.FunctionSpace(Vh.mesh(), element)
             
         ph = dl.TrialFunction(Qh)
         qh = dl.TestFunction(Qh)
@@ -370,11 +368,9 @@ class BiLaplacianPrior(_Prior):
             representation_old = dl.parameters["form_compiler"]["representation"]
             dl.parameters["form_compiler"]["representation"] = "quadrature"
             
-        if dlversion() <= (1,6,0):
-            Qh = dl.FunctionSpace(Vh.mesh(), 'Quadrature', qdegree)
-        else:
-            element = dl.FiniteElement("Quadrature", Vh.mesh().ufl_cell(), qdegree, quad_scheme="default")
-            Qh = dl.FunctionSpace(Vh.mesh(), element)
+
+        element = dl.FiniteElement("Quadrature", Vh.mesh().ufl_cell(), qdegree, quad_scheme="default")
+        Qh = dl.FunctionSpace(Vh.mesh(), element)
             
         ph = dl.TrialFunction(Qh)
         qh = dl.TestFunction(Qh)
@@ -506,11 +502,8 @@ class MollifiedBiLaplacianPrior(_Prior):
             representation_old = dl.parameters["form_compiler"]["representation"]
             dl.parameters["form_compiler"]["representation"] = "quadrature"
         
-        if dlversion() <= (1,6,0):
-            Qh = dl.FunctionSpace(Vh.mesh(), 'Quadrature', qdegree)
-        else:
-            element = dl.FiniteElement("Quadrature", Vh.mesh().ufl_cell(), qdegree, quad_scheme="default")
-            Qh = dl.FunctionSpace(Vh.mesh(), element)
+        element = dl.FiniteElement("Quadrature", Vh.mesh().ufl_cell(), qdegree, quad_scheme="default")
+        Qh = dl.FunctionSpace(Vh.mesh(), element)
             
         ph = dl.TrialFunction(Qh)
         qh = dl.TestFunction(Qh)

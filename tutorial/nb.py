@@ -20,9 +20,6 @@ import dolfin as dl
 import numpy as np
 from matplotlib import animation
 
-import sys
-sys.path.append( "../" )
-from hippylib import dlversion
 
 def mesh2triang(mesh):
     xy = mesh.coordinates()

@@ -16,7 +16,6 @@ from __future__ import absolute_import, division, print_function
 from dolfin import Vector
 import numpy as np
 from .linalg import randn_perturb
-from .checkDolfinVersion import dlversion
 
 class TimeDependentVector:
     """
@@ -99,10 +98,8 @@ class TimeDependentVector:
             
         assert abs(t - self.times[i]) < self.tol
         
-        if dlversion() >= (2017,2,0):
-            self.data[i].set_local( u.get_local() )
-        else:
-            self.data[i].set_local( u.array() )
+        self.data[i].set_local( u.get_local() )
+
         
     def retrieve(self, u, t):
         """
@@ -115,10 +112,7 @@ class TimeDependentVector:
             
         assert abs(t - self.times[i]) < self.tol
         
-        if dlversion() >= (2017,2,0):
-            u.set_local( self.data[i].get_local() )            
-        else:
-            u.set_local( self.data[i].array() )
+        u.set_local( self.data[i].get_local() )            
         
     def norm(self, time_norm, space_norm):
         """

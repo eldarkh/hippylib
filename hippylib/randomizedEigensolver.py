@@ -17,8 +17,6 @@ from dolfin import Vector
 import numpy as np
 import math
 
-from .checkDolfinVersion import dlversion
-
 """
 Randomized algorithms for the solution of Hermitian Eigenvalues Problems (HEP)
 and Generalized Hermitian Eigenvalues Problems (GHEP).

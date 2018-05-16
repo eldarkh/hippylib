@@ -16,8 +16,6 @@ from __future__ import absolute_import, division, print_function
 from dolfin import Vector
 import numpy as np
 
-from .checkDolfinVersion import dlversion
-
 
 class LowRankOperator:
     """

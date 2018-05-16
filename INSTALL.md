@@ -15,15 +15,15 @@ $$/   $$/ $$$$$$/ $$/       $$/           $$/     $$/ $$/ $$$$$$$/
 
                           https://hippylib.github.io
 
-`hIPPYlib` depends on [FEniCS](http://fenicsproject.org/) version 1.6 or
+`hIPPYlib` depends on [FEniCS](http://fenicsproject.org/) version 2016.1 or
 above.  The suggested version of `FEniCS` to use with `hIPPYlib` is
 2017.2.
 
 `FEniCS` needs to be built with the following dependecies:
 
  - `numpy`, `scipy`, `matplotlib`
- - `PETSc` and `petsc4py` (version 3.7.0 or above)
- - `SLEPc` and `slepc4py` (version 3.7.0 or above)
+ - `PETSc` and `petsc4py` (version 3.8.0 or above)
+ - `SLEPc` and `slepc4py` (version 3.8.0 or above)
  - PETSc dependencies: `parmetis`, `scotch`, `suitesparse`, `superlu_dist`, `ml`
  - (optional): `mshr`, `jupyter`
 
