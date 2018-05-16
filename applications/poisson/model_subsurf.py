@@ -42,7 +42,6 @@ def true_model(Vh, gamma, delta, anis_diff):
     return atrue
             
 if __name__ == "__main__":
-    dl.set_log_active(False)
     sep = "\n"+"#"*80+"\n"
     print(sep, "Set up the mesh and finite element spaces", sep)
     ndim = 2

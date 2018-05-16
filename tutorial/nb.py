@@ -28,11 +28,6 @@ def mesh2triang(mesh):
     xy = mesh.coordinates()
     return tri.Triangulation(xy[:, 0], xy[:, 1], mesh.cells())
 
-def mplot_cellfunction(cellfn):
-    C = cellfn.array()
-    tri = mesh2triang(cellfn.mesh())
-    return plt.tripcolor(tri, facecolors=C)
-
 def mplot_function(f, vmin, vmax, logscale):
     mesh = f.function_space().mesh()
     if (mesh.geometry().dim() != 2):
@@ -70,12 +65,6 @@ def plot(obj, colorbar=True, subplot_loc=None, mytitle=None, show_axis='off', vm
 #    plt.gca().set_aspect('equal')
     if isinstance(obj, dl.Function):
         pp = mplot_function(obj, vmin, vmax, logscale)
-    elif isinstance(obj, dl.CellFunctionSizet):
-        pp = mplot_cellfunction(obj)
-    elif isinstance(obj, dl.CellFunctionDouble):
-        pp = mplot_cellfunction(obj)
-    elif isinstance(obj, dl.CellFunctionInt):
-        pp = mplot_cellfunction(obj)
     elif isinstance(obj, dl.Mesh):
         if (obj.geometry().dim() != 2):
             raise AttributeError('Mesh must be 2D')

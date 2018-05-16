@@ -39,29 +39,31 @@ class TimeDependentAD:
         kappa = dl.Constant(.001)
         dt_expr = dl.Constant(self.dt)
         
-        r_trial = u + dt_expr*( -dl.div(kappa*dl.nabla_grad(u))+ dl.inner(wind_velocity, dl.nabla_grad(u)) )
-        r_test  = v + dt_expr*( -dl.div(kappa*dl.nabla_grad(v))+ dl.inner(wind_velocity, dl.nabla_grad(v)) )
+        r_trial = u + dt_expr*( -dl.div(kappa*dl.grad(u))+ dl.inner(wind_velocity, dl.grad(u)) )
+        r_test  = v + dt_expr*( -dl.div(kappa*dl.grad(v))+ dl.inner(wind_velocity, dl.grad(v)) )
 
         
-        h = dl.CellSize(mesh)
-        vnorm = dl.sqrt(dl.inner(wind_velocity, wind_velocity))
+        h = dl.CellDiameter(mesh)
+        h2 = h*h
+        h4 = h2*h2
+        vnorm2 = dl.inner(wind_velocity, wind_velocity)
         if gls_stab:
-            tau = dl.Min((h*h)/(dl.Constant(2.)*kappa), h/vnorm )
+            tau = dl.Constant(1.)/dl.sqrt( dl.Constant(4.)*kappa*kappa/h4 + vnorm2/h2 )
         else:
             tau = dl.Constant(0.)
                             
         self.M = dl.assemble( dl.inner(u,v)*dl.dx )
         self.M_stab = dl.assemble( dl.inner(u, v+tau*r_test)*dl.dx )
         self.Mt_stab = dl.assemble( dl.inner(u+tau*r_trial,v)*dl.dx )
-        Nvarf  = (dl.inner(kappa *dl.nabla_grad(u), dl.nabla_grad(v)) + dl.inner(wind_velocity, dl.nabla_grad(u))*v )*dl.dx
-        Ntvarf  = (dl.inner(kappa *dl.nabla_grad(v), dl.nabla_grad(u)) + dl.inner(wind_velocity, dl.nabla_grad(v))*u )*dl.dx
+        Nvarf  = (dl.inner(kappa *dl.grad(u), dl.grad(v)) + dl.inner(wind_velocity, dl.grad(u))*v )*dl.dx
+        Ntvarf  = (dl.inner(kappa *dl.grad(v), dl.grad(u)) + dl.inner(wind_velocity, dl.grad(v))*u )*dl.dx
         self.N  = dl.assemble( Nvarf )
         self.Nt = dl.assemble(Ntvarf)
         stab = dl.assemble( tau*dl.inner(r_trial, r_test)*dl.dx)
         self.L = self.M + dt*self.N + stab
         self.Lt = self.M + dt*self.Nt + stab
         
-        boundaries = dl.FacetFunction("size_t", mesh)
+        boundaries = dl.MeshFunction("size_t", mesh, mesh.topology().dim() - 1)
         boundaries.set_all(0)
 
         class InsideBoundary(dl.SubDomain):
@@ -374,9 +376,9 @@ def computeVelocityField(mesh):
     (v_test, q_test) = dl.TestFunctions (XW)
     
     def strain(v):
-        return dl.sym(dl.nabla_grad(v))
+        return dl.sym(dl.grad(v))
     
-    F = ( (2./Re)*dl.inner(strain(v),strain(v_test))+ dl.inner (dl.nabla_grad(v)*v, v_test)
+    F = ( (2./Re)*dl.inner(strain(v),strain(v_test))+ dl.inner (dl.grad(v)*v, v_test)
            - (q * dl.div(v_test)) + ( dl.div(v) * q_test) ) * dl.dx
            
     dl.solve(F == 0, vq, bcs, solver_parameters={"newton_solver":
@@ -387,7 +389,6 @@ def computeVelocityField(mesh):
 
         
 if __name__ == "__main__":
-    dl.set_log_active(False)
     np.random.seed(1)
     sep = "\n"+"#"*80+"\n"
     print(sep, "Set up the mesh and finite element spaces.\n","Compute wind velocity", sep)

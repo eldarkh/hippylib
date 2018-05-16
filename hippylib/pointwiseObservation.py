@@ -18,22 +18,9 @@ import numpy as np
 import os
 
 from .checkDolfinVersion import dlversion
-    
-abspath = os.path.dirname( os.path.abspath(__file__) )
-source_directory = os.path.join(abspath,"AssemblePointwiseObservation")
-header_file = open(os.path.join(source_directory,"AssemblePointwiseObservation.h"), "r")
-code = header_file.read()
-header_file.close()
-cpp_sources = ["AssemblePointwiseObservation.cpp"]
 
-include_dirs = [".", source_directory]
-for ss in ['PROFILE_INSTALL_DIR', 'PETSC_DIR', 'SLEPC_DIR']:
-    if ss in os.environ.keys():
-        include_dirs.append(os.environ[ss]+'/include')
-        
-cpp_module = dl.compile_extension_module(
-             code = code, source_directory = source_directory,
-             sources = cpp_sources, include_dirs=include_dirs)
+from petsc4py import PETSc
+import numpy as np
 
 def assemblePointwiseObservation(Vh, targets):
     """
@@ -44,12 +31,43 @@ def assemblePointwiseObservation(Vh, targets):
      
     Note: This Function will not work in parallel!!!
     """
-    #Ensure that PetscInitialize is called
-    dummy = dl.assemble( dl.inner(dl.TrialFunction(Vh), dl.TestFunction(Vh))*dl.dx )
-    #Call the cpp module to compute the pointwise observation matrix
-    tmp = cpp_module.PointwiseObservation(Vh,targets.flatten())
-    #return the matrix
-    return tmp.GetMatrix()
+    ntargets, dim = targets.shape
+    mesh = Vh.mesh()
+    coords = mesh.coordinates()
+    cells = mesh.cells()
+    dolfin_element = Vh.dolfin_element()
+    dofmap = Vh.dofmap()
+    bbt = mesh.bounding_box_tree()
+    sdim = dolfin_element.space_dimension()
+    
+    A = PETSc.Mat()
+    A.create(mesh.mpi_comm())
+    A.setSizes([ntargets, Vh.dim()])
+    A.setType("aij")
+    A.setPreallocationNNZ(sdim*ntargets)
+    
+    # In Parallel we will need to fix the rowLGmap so that only the points in the
+    # local mesh are kept.    
+    rowLGmap = PETSc.LGMap().create(range(0,ntargets), comm = mesh.mpi_comm() )
+    colLGmap = PETSc.LGMap().create(dofmap.dofs(), comm = mesh.mpi_comm() )
+    A.setLGMap(rowLGmap, colLGmap)
+    
+    for k in range(ntargets):
+        t = targets[k,:]
+        p = dl.Point(t)
+        cell_id = bbt.compute_first_entity_collision(p)
+        tvert = coords[cells[cell_id,:],:]
+        v = dolfin_element.evaluate_basis_all(t,tvert, cell_id)
+        cols = dofmap.cell_dofs(cell_id)
+        for j in range(sdim):
+            A[k, cols[j]] = v[j]
+            
+    A.assemblyBegin()
+    A.assemblyEnd()
+     
+    return dl.Matrix( dl.PETScMatrix(A) )
+    
+
 
 def exportPointwiseObservation(points, data, fname, varname="observation"):
     """
@@ -95,55 +113,3 @@ def exportPointwiseObservation(points, data, fname, varname="observation"):
     else:
         f.write(np.array_str( data.array() ).replace("[", "").replace("]", "") )
     f.write('\n</DataArray>\n</PointData>\n<CellData>\n</CellData>\n</Piece>\n</PolyData>\n</VTKFile>')
-
-    
-    
-
-#    from petsc4py import PETSc
-#    import numpy as np
-#
-#    def assemblePointwiseObservation(Vh, targets):
-#        """
-#        Assemble the pointwise observation matrix:
-#        Input
-#        - Vh: FEniCS finite element space
-#        - targets: observation points (numpy array)
-#         
-#        Note: This Function will not work in parallel!!!
-#        """
-#        ntargets, dim = targets.shape
-#        mesh = Vh.mesh()
-#        coords = mesh.coordinates()
-#        cells = mesh.cells()
-#        dolfin_element = Vh.dolfin_element()
-#        dofmap = Vh.dofmap()
-#        bbt = mesh.bounding_box_tree()
-#        sdim = dolfin_element.space_dimension()
-#        v = np.zeros(sdim)
-#        
-#        A = PETSc.Mat()
-#        A.create(mesh.mpi_comm())
-#        A.setSizes([ntargets, Vh.dim()])
-#        A.setType("aij")
-#        A.setPreallocationNNZ(sdim*ntargets)
-#        
-#        # In Parallel we will need to fix the rowLGmap so that only the points in the
-#        # local mesh are kept.    
-#        rowLGmap = PETSc.LGMap().create(range(0,ntargets), comm = mesh.mpi_comm() )
-#        colLGmap = PETSc.LGMap().create(dofmap.dofs(), comm = mesh.mpi_comm() )
-#        A.setLGMap(rowLGmap, colLGmap)
-#        
-#        for k in range(ntargets):
-#            t = targets[k,:]
-#            p = dl.Point(t)
-#            cell_id = bbt.compute_first_entity_collision(p)
-#            tvert = coords[cells[cell_id,:],:]
-#            dolfin_element.evaluate_basis_all(v,t,tvert, cell_id)
-#            cols = dofmap.cell_dofs(cell_id)
-#            for j in range(sdim):
-#                A[k, cols[j]] = v[j]
-#                
-#        A.assemblyBegin()
-#        A.assemblyEnd()
-#         
-#        return dl.Matrix( dl.PETScMatrix(A) )

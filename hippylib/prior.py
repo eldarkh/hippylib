@@ -169,7 +169,7 @@ class LaplacianPrior(_Prior):
         trial = dl.TrialFunction(Vh)
         test  = dl.TestFunction(Vh)
         
-        varfL = dl.inner(dl.nabla_grad(trial), dl.nabla_grad(test))*dl.dx
+        varfL = dl.inner(dl.grad(trial), dl.grad(test))*dl.dx
         varfM = dl.inner(trial,test)*dl.dx
         
         self.M = dl.assemble(varfM)
@@ -339,7 +339,7 @@ class BiLaplacianPrior(_Prior):
         test  = dl.TestFunction(Vh)
         
         if Theta == None:
-            varfL = dl.inner(dl.nabla_grad(trial), dl.nabla_grad(test))*dl.dx
+            varfL = dl.inner(dl.grad(trial), dl.grad(test))*dl.dx
         else:
             varfL = dl.inner( Theta*dl.grad(trial), dl.grad(test))*dl.dx
         
@@ -462,7 +462,7 @@ class MollifiedBiLaplacianPrior(_Prior):
         test  = dl.TestFunction(Vh)
         
         if Theta == None:
-            varfL = dl.inner(dl.nabla_grad(trial), dl.nabla_grad(test))*dl.dx
+            varfL = dl.inner(dl.grad(trial), dl.grad(test))*dl.dx
         else:
             varfL = dl.inner(Theta*dl.grad(trial), dl.grad(test))*dl.dx
         varfM = dl.inner(trial,test)*dl.dx

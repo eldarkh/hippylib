@@ -38,7 +38,7 @@ class Poisson:
         self.Vh = Vh
         
         # Initialize Expressions
-        self.atrue = Expression('log(2 + 7*(pow(pow(x[0] - 0.5,2) + pow(x[1] - 0.5,2),0.5) > 0.2))',
+        self.atrue = Expression('std::log(2 + 7*(std::pow(std::pow(x[0] - 0.5,2) + std::pow(x[1] - 0.5,2),0.5) > 0.2))',
                                 element=Vh[PARAMETER].ufl_element())
         self.f = Constant(1.0)
         self.u_o = Vector()
@@ -101,7 +101,7 @@ class Poisson:
         trial = TrialFunction(self.Vh[STATE])
         test = TestFunction(self.Vh[STATE])
         c = vector2Function(x[PARAMETER], self.Vh[PARAMETER])
-        Avarf = inner(exp(c)*nabla_grad(trial), nabla_grad(test))*dx
+        Avarf = inner(exp(c)*grad(trial), grad(test))*dx
         if not assemble_adjoint:
             bform = inner(self.f, test)*dx
             Matrix, rhs = assemble_system(Avarf, bform, self.bc)
@@ -125,7 +125,7 @@ class Poisson:
         test = TestFunction(self.Vh[STATE])
         s = vector2Function(x[STATE], Vh[STATE])
         c = vector2Function(x[PARAMETER], Vh[PARAMETER])
-        Cvarf = inner(exp(c) * trial * nabla_grad(s), nabla_grad(test)) * dx
+        Cvarf = inner(exp(c) * trial * grad(s), grad(test)) * dx
         C = assemble(Cvarf)
 #        print("||c||", x[PARAMETER].norm("l2"), "||s||", x[STATE].norm("l2"), "||C||", C.norm("linf"))
         self.bc0.zero(C)
@@ -153,7 +153,7 @@ class Poisson:
         test  = TestFunction(self.Vh[PARAMETER])
         a = vector2Function(x[ADJOINT], self.Vh[ADJOINT])
         c = vector2Function(x[PARAMETER], self.Vh[PARAMETER])
-        varf = inner(exp(c)*nabla_grad(trial),nabla_grad(a))*test*dx
+        varf = inner(exp(c)*grad(trial),grad(a))*test*dx
         Wau = assemble(varf)
         Wau_t = Transpose(Wau)
         self.bc0.zero(Wau_t)
@@ -169,7 +169,7 @@ class Poisson:
         s = vector2Function(x[STATE], self.Vh[STATE])
         c = vector2Function(x[PARAMETER], self.Vh[PARAMETER])
         a = vector2Function(x[ADJOINT], self.Vh[ADJOINT])
-        varf = inner(nabla_grad(a),exp(c)*nabla_grad(s))*trial*test*dx
+        varf = inner(grad(a),exp(c)*grad(s))*trial*test*dx
         return assemble(varf)
 
         
@@ -199,7 +199,7 @@ class Poisson:
         
         Note: p is not needed to compute the cost functional
         """        
-        assert x[STATE] != None
+        assert x[STATE] is not None
                 
         diff = x[STATE] - self.u_o
         Wuudiff = self.Wuu*diff
@@ -330,7 +330,6 @@ class Poisson:
         self.Raa.mult(da, out)
             
 if __name__ == "__main__":
-    set_log_active(False)
     nx = 64
     ny = 64
     mesh = UnitSquareMesh(nx, ny)

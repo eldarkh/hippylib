@@ -13,9 +13,11 @@
 
 from __future__ import absolute_import, division, print_function
 
-from dolfin import compile_extension_module, Vector, PETScKrylovSolver, Function
+import dolfin as dl
 import os
 import numpy as np
+
+from petsc4py import PETSc
 
 from .checkDolfinVersion import dlversion
 
@@ -24,8 +26,7 @@ def amg_method():
     Determine which AMG preconditioner to use.
     If avaialable use ML, which is faster than the PETSc one.
     """
-    S = PETScKrylovSolver()
-    for pp in S.preconditioners():
+    for pp in dl.krylov_solver_preconditioners():
         if pp[0] == 'ml_amg':
             return 'ml_amg'
         
@@ -34,49 +35,52 @@ def amg_method():
 def get_local_size(v):
     return v.get_local().shape[0]
 
-abspath = os.path.dirname( os.path.abspath(__file__) )
-source_directory = os.path.join(abspath,"cpp_linalg")
-header_file = open(os.path.join(source_directory,"linalg.h"), "r")
-code = header_file.read()
-header_file.close()
-cpp_sources = ["linalg.cpp"]  
-
-include_dirs = [".", source_directory]
-for ss in ['PROFILE_INSTALL_DIR', 'PETSC_DIR', 'SLEPC_DIR']:
-    if ss in os.environ.keys():
-        include_dirs.append(os.environ[ss]+'/include')
-
-cpp_module = compile_extension_module(
-code=code, source_directory=source_directory, sources=cpp_sources,
-include_dirs=include_dirs)
-
 def MatMatMult(A,B):
     """
     Compute the matrix-matrix product A*B.
     """
-    s = cpp_module.cpp_linalg()
-    return s.MatMatMult(A,B)
+    #out = PETSc.Mat()
+    #ierr = PETSc.MatMatMult(dl.as_backend_type(A).mat(), dl.as_backend_type(B).mat(),
+    #                        PETSc.MAT_INITIAL_MATRIX, PETSc.PETSC_DEFAULT, out)
+    #assert ierr == 0
+    Amat = dl.as_backend_type(A).mat()
+    Bmat = dl.as_backend_type(B).mat()
+    out = Amat.matMult(Bmat)
+    rmap, _ = Amat.getLGMap()
+    _, cmap = Bmat.getLGMap()
+    out.setLGMap(rmap, cmap)
+    return dl.Matrix(dl.PETScMatrix(out))
 
 def MatPtAP(A,P):
     """
     Compute the triple matrix product P^T*A*P.
     """
-    s = cpp_module.cpp_linalg()
-    return s.MatPtAP(A,P)
+    out = PETSc.Mat()
+    ierr = PETSc.MatPtAP(dl.as_backend_type(A).mat(), dl.as_backend_type(B).mat(),
+                         PETSc.MAT_INITIAL_MATRIX, 1,0, out)
+    assert ierr == 0
+    return dl.Matrix(dl.PETScMatrix(out))
 
 def MatAtB(A,B):
     """
     Compute the matrix-matrix product A^T*B.
     """
-    s = cpp_module.cpp_linalg()
-    return s.MatAtB(A,B)
+    out = PETSc.Mat()
+    ierr = PETSc.MatTransposeMatMult(dl.as_backend_type(A).mat(), dl.as_backend_type(B).mat(),
+                                     PETSc.MAT_INITIAL_MATRIX, PETSc.PETSC_DEFAULT, out)
+    assert ierr == 0
+    return dl.Matrix(dl.PETScMatrix(out))
 
 def Transpose(A):
     """
     Compute the matrix transpose
     """
-    s = cpp_module.cpp_linalg()
-    return s.Transpose(A)
+    Amat = dl.as_backend_type(A).mat()
+    AT = PETSc.Mat()
+    Amat.transpose(AT)
+    rmap, cmap = Amat.getLGMap()
+    AT.setLGMap(cmap, rmap)
+    return dl.Matrix( dl.PETScMatrix(AT) )
     
 
 def to_dense(A):
@@ -94,8 +98,8 @@ def to_dense(A):
         
         return B
     else:
-        x = Vector()
-        Ax = Vector()
+        x = dl.Vector()
+        Ax = dl.Vector()
         A.init_vector(x,1)
         A.init_vector(Ax,0)
         
@@ -128,7 +132,7 @@ def get_diagonal(A, d, solve_mode=True):
     Compute the diagonal of the square operator A
     or its inverse A^{-1} (if solve_mode=True).
     """
-    ej, xj = Vector(), Vector()
+    ej, xj = dl.Vector(), dl.Vector()
 
     if hasattr(A, "init_vector"):
         A.init_vector(ej,1)
@@ -168,7 +172,7 @@ def estimate_diagonal_inv2(Asolver, k, d):
     An estimator for the diagonal of a matrix,
     Applied Numerical Mathematics, 57 (2007), pp. 1214-1229.
     """
-    x, b = Vector(), Vector()
+    x, b = dl.Vector(), dl.Vector()
     
     if hasattr(Asolver, "init_vector"):
         Asolver.init_vector(x,1)
@@ -201,7 +205,7 @@ def randn_perturb(x, std_dev):
 class Solver2Operator:
     def __init__(self,S):
         self.S = S
-        self.tmp = Vector()
+        self.tmp = dl.Vector()
         
     def init_vector(self, x, dim):
         if hasattr(self.S, "init_vector"):
@@ -221,7 +225,7 @@ class Solver2Operator:
 class Operator2Solver:
     def __init__(self,op):
         self.op = op
-        self.tmp = Vector()
+        self.tmp = dl.Vector()
         
     def init_vector(self, x, dim):
         if hasattr(self.op, "init_vector"):
@@ -241,7 +245,7 @@ def vector2Function(x,Vh, **kwargs):
     Wrap a finite element vector x into a finite element function in the space Vh.
     kwargs is optional keywords arguments to be passed to the construction of a dolfin Function
     """
-    fun = Function(Vh,**kwargs)
+    fun = dl.Function(Vh,**kwargs)
     fun.vector().zero()
     fun.vector().axpy(1., x)
     

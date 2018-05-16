@@ -15,10 +15,15 @@ from __future__ import absolute_import, division, print_function
 
 import dolfin as dl
 
+if not hasattr(dl, "DOLFIN_VERSION_MAJOR"):
+    dl.DOLFIN_VERSION_MAJOR = 2018
+    dl.DOLFIN_VERSION_MINOR = 1
+    dl.DOLFIN_VERSION_MICRO = 0
+
 def dlversion():
     return (dl.DOLFIN_VERSION_MAJOR, dl.DOLFIN_VERSION_MINOR, dl.DOLFIN_VERSION_MICRO)
 
-supported_versions = [(1,6,0), (2016,1,0), (2016,2,0), (2017,1,0), (2017,2,0)]
+supported_versions = [(1,6,0), (2016,1,0), (2016,2,0), (2017,1,0), (2017,2,0), (2018,1,0)]
 
 def checkdlversion():
     if dlversion() not in supported_versions:
