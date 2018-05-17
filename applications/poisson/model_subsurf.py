@@ -11,8 +11,6 @@
 # terms of the GNU General Public License (as published by the Free
 # Software Foundation) version 2.0 dated June 1991.
 
-from __future__ import absolute_import, division, print_function
-
 import dolfin as dl
 import math
 import numpy as np
@@ -63,7 +61,7 @@ if __name__ == "__main__":
     bc0 = dl.DirichletBC(Vh[STATE], u_bdr0, u_boundary)
     
     def pde_varf(u,a,p):
-        return dl.exp(a)*dl.inner(dl.nabla_grad(u), dl.nabla_grad(p))*dl.dx - f*p*dl.dx
+        return dl.exp(a)*dl.inner(dl.grad(u), dl.grad(p))*dl.dx - f*p*dl.dx
     
     pde = PDEVariationalProblem(Vh, pde_varf, bc, bc0, is_fwd_linear=True)
  
@@ -76,10 +74,9 @@ if __name__ == "__main__":
     gamma = .1
     delta = .5
     
-    anis_diff = dl.Expression(code_AnisTensor2D, degree = 1)
-    anis_diff.theta0 = 2.
-    anis_diff.theta1 = .5
-    anis_diff.alpha = math.pi/4
+    anis_diff = dl.CompiledExpression(ExpressionModule.AnisTensor2D(), degree = 1)
+    anis_diff.set(2., .5, math.pi/4.0 )
+    
     atrue = true_model(Vh[PARAMETER], gamma, delta,anis_diff)
         
     locations = np.array([[0.1, 0.1], [0.1, 0.9], [.5,.5], [.9, .1], [.9, .9]])

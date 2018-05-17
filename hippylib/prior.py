@@ -11,15 +11,13 @@
 # terms of the GNU General Public License (as published by the Free
 # Software Foundation) version 2.0 dated June 1991.
 
-from __future__ import absolute_import, division, print_function
-
 import dolfin as dl
 import numpy as np
 from .linalg import MatMatMult, get_diagonal, amg_method, estimate_diagonal_inv2, Solver2Operator, Operator2Solver, get_local_size
 from .traceEstimator import TraceEstimator
 from .randomizedEigensolver import doublePass, doublePassG
 import math
-from .expression import code_Mollifier
+from .expression import ExpressionModule
 from .checkDolfinVersion import dlversion
 
 try:
@@ -471,13 +469,8 @@ class MollifiedBiLaplacianPrior(_Prior):
         self.Msolver.parameters["error_on_nonconvergence"] = True
         self.Msolver.parameters["nonzero_initial_guess"] = False
         
-        #mfun = Mollifier(gamma/delta, dl.inv(Theta), order, locations)
-        mfun = dl.Expression(code_Mollifier, degree = Vh.ufl_element().degree()+2)
-        mfun.l = gamma/delta
-        mfun.o = order
-        mfun.theta0 = 1./Theta.theta0
-        mfun.theta1 = 1./Theta.theta1
-        mfun.alpha = Theta.alpha
+        mfun = dl.CompiledExpression(ExpressionModule.Mollifier(), degree = Vh.ufl_element().degree()+2)
+        mfun.set(Theta._cpp_object, gamma/delta, order)
         for ii in range(locations.shape[0]):
             mfun.addLocation(locations[ii,0], locations[ii,1])
             

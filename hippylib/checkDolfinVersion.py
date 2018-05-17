@@ -11,8 +11,6 @@
 # terms of the GNU General Public License (as published by the Free
 # Software Foundation) version 2.0 dated June 1991.
 
-from __future__ import absolute_import, division, print_function
-
 import dolfin as dl
 
 if not hasattr(dl, "DOLFIN_VERSION_MAJOR"):
@@ -23,7 +21,7 @@ if not hasattr(dl, "DOLFIN_VERSION_MAJOR"):
 def dlversion():
     return (dl.DOLFIN_VERSION_MAJOR, dl.DOLFIN_VERSION_MINOR, dl.DOLFIN_VERSION_MICRO)
 
-supported_versions = [(2016,1,0), (2016,2,0), (2017,1,0), (2017,2,0), (2018,1,0)]
+supported_versions = [(2018,1,0)]
 
 def checkdlversion():
     if dlversion() not in supported_versions:
@@ -31,5 +29,4 @@ def checkdlversion():
         exit()
         
 def show_dl_plots():
-    if dlversion() < (2017,2,0):
-        dl.interactive()
+    pass

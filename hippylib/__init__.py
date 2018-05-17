@@ -29,14 +29,12 @@ the building blocks for experimenting new ideas and developing scalable
 algorithms for PDE-based deterministic and Bayesian inverse problems.
 """
 
-from __future__ import absolute_import, division, print_function
-
 
 from .checkDolfinVersion import dlversion, checkdlversion, show_dl_plots
 checkdlversion()
 
 # utils
-from .expression import code_AnisTensor2D, code_Mollifier
+from .expression import ExpressionModule
 from .linalg import MatMatMult, MatPtAP, Transpose, to_dense, trace, get_diagonal, estimate_diagonal_inv2, \
                     randn_perturb, amg_method, Solver2Operator, Operator2Solver, vector2Function, get_local_size
 from .pointwiseObservation import assemblePointwiseObservation, exportPointwiseObservation

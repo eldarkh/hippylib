@@ -11,8 +11,6 @@
 # terms of the GNU General Public License (as published by the Free
 # Software Foundation) version 2.0 dated June 1991.
 
-from __future__ import absolute_import, division, print_function
-
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 import matplotlib.colors as cls

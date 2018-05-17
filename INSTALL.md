@@ -15,9 +15,8 @@ $$/   $$/ $$$$$$/ $$/       $$/           $$/     $$/ $$/ $$$$$$$/
 
                           https://hippylib.github.io
 
-`hIPPYlib` depends on [FEniCS](http://fenicsproject.org/) version 2016.1 or
-above.  The suggested version of `FEniCS` to use with `hIPPYlib` is
-2017.2.
+`hIPPYlib` depends on [FEniCS](http://fenicsproject.org/) version 2018.1 or
+above.
 
 `FEniCS` needs to be built with the following dependecies:
 
@@ -45,7 +44,7 @@ We first create a new Docker container to run the `jupyter-notebook`
 command and to expose port `8888`.  From a command line shell, go to
 the `hippylib` folder and type:
 ```
-docker run --name hippylib-nb -w /home/fenics/hippylib -v $(pwd):/home/fenics/hippylib -d -p 127.0.0.1:8888:8888 quay.io/fenicsproject/stable:2017.2.0.r4 'jupyter-notebook --ip=0.0.0.0'
+docker run --name hippylib-nb -w /home/fenics/hippylib -v $(pwd):/home/fenics/hippylib -d -p 127.0.0.1:8888:8888 quay.io/fenicsproject/stable:2018.1.0.r1 'jupyter-notebook --ip=0.0.0.0'
 docker logs hippylib-nb
 ```
 The notebook will be available at
@@ -65,7 +64,7 @@ on the workflow presented above.
 We first create a new `Docker` container to run the `jupyter-notebook` command and to expose port `8888` on the virtual machine.
 From a command line shell, go to the `hippylib` folder and type:
 ```
-docker run --name hippylib-nb -w /home/fenics/hippylib -v $(pwd):/home/fenics/hippylib -d -p $(docker-machine ip $(docker-machine active)):8888:8888 quay.io/fenicsproject/stable:2017.2.0.r4 'jupyter-notebook --ip=0.0.0.0'
+docker run --name hippylib-nb -w /home/fenics/hippylib -v $(pwd):/home/fenics/hippylib -d -p $(docker-machine ip $(docker-machine active)):8888:8888 quay.io/fenicsproject/stable:2018.1.0.r1 'jupyter-notebook --ip=0.0.0.0'
 docker logs hippylib-nb
 ```
 To find out the IP of the virtual machine we type:
@@ -97,20 +96,9 @@ first install [Anaconda](https://docs.continuum.io/anaconda/install),
 then run following commands in your terminal:
 
 ```    
-conda create -n fenicsproject -c conda-forge fenics=2017.2.0
+conda create -n fenicsproject -c conda-forge fenics=2018.1.0
 source activate fenicsproject
 ```
-
-## Buid FEniCS from source using hashdist (Linux and MacOS 10.12 or below)
-
-To build `FEniCS` from source we suggest using the scripts and profile
-files in `fenics-hashdist`. These scripts and profile files contain
-small modifications with respect to the ones provided by the `FEniCS`
-community to ensure that all the dependencies needed by `hIPPYlib` are
-installed.
-
-See `fenics-hashdist/README.md` for further details.
-
 
 ## Other ways to build FEniCS
 
